@@ -12,7 +12,7 @@ import ContactPage from './pages/contact';
 function App() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+  <Navbar />
       <main className="flex-grow">
         <ScrollToTop />
         <Switch>

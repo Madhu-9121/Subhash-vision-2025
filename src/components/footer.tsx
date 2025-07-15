@@ -13,8 +13,8 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-2 mb-4">
               <Logo size={40} />
               <div className="flex flex-col">
-                <p className="font-bold text-lg">Kalam's Vision</p>
-                <p className="text-tiny text-default-500">Ignite curiosity, build tomorrow</p>
+                <p className="font-bold text-lg">Kalam Vision</p>
+                <p className="text-tiny text-default-500">Where Curiosity Meets Discovery !</p>
               </div>
             </div>
             <p className="text-default-600 mb-4">
@@ -103,19 +103,19 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <Icon icon="lucide:map-pin" className="text-primary mt-1" />
-                <span>123 Education Street, Innovation City, 600001</span>
+                <span>Block No: 2/11, Bangalore, 560011</span>
               </li>
               <li className="flex items-center gap-2">
                 <Icon icon="lucide:phone" className="text-primary" />
-                <span>+91 98765 43210</span>
+                <span>+91 7995080949</span>
               </li>
               <li className="flex items-center gap-2">
                 <Icon icon="lucide:mail" className="text-primary" />
-                <span>info@kalamsvision.org</span>
+                <span>info@kalamvision.com</span>
               </li>
               <li className="flex items-center gap-2">
                 <Icon icon="lucide:clock" className="text-primary" />
-                <span>Mon-Fri: 9:00 AM - 5:00 PM</span>
+                <span>Monday-Sunday: 8:00 AM - 10:00 PM</span>
               </li>
             </ul>
           </div>
@@ -125,7 +125,7 @@ export const Footer: React.FC = () => {
         
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-default-500 text-sm">
-            © {new Date().getFullYear()} Kalam's Vision. All rights reserved.
+            © {new Date().getFullYear()} Kalam Vision. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm">
             <Link href="#" color="foreground" className="hover:text-primary transition-colors">
