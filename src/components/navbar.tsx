@@ -11,7 +11,6 @@ import {
   Link,
   Button
 } from '@heroui/react';
-import { Logo } from './logo';
 import { motion } from 'framer-motion';
 
 export const Navbar: React.FC = () => {
@@ -30,7 +29,9 @@ export const Navbar: React.FC = () => {
     <HeroNavbar 
       isBordered 
       isBlurred={false}
-      className="bg-background/70 backdrop-blur-md"
+      
+      className="lg:h-20 xl:h-24 transition-all duration-300 bg-background/70 backdrop-blur-md"
+
       maxWidth="xl"
     >
       <NavbarContent>
@@ -40,14 +41,16 @@ export const Navbar: React.FC = () => {
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         />
         <NavbarBrand>
-          <RouterLink to="/" className="flex items-center gap-2">
-            <Logo size={40} />
-            <div className="flex flex-col">
-              <p className="font-bold text-inherit text-lg">Kalam's Vision</p>
-              <p className="text-tiny text-default-500">Ignite curiosity, build tomorrow</p>
-            </div>
-          </RouterLink>
-        </NavbarBrand>
+  <RouterLink to="/" className="flex items-center gap-2">
+    <div className="flex flex-col">
+      <img 
+        className="h-28 w-auto sm:h-28 md:h-32 lg:h-28 xl:h-36 object-contain transition-all duration-300"
+        src="src\assets\Kalam Vision Logo-02.png" 
+        alt="Kalam Vision Logo"
+      />
+    </div>
+  </RouterLink>
+</NavbarBrand>
       </NavbarContent>
 
       <NavbarContent className="hidden sm:flex gap-4" justify="center">

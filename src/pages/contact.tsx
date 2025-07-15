@@ -51,9 +51,10 @@ const ContactPage: React.FC = () => {
                       <div>
                         <h3 className="text-lg font-semibold mb-1">Our Location</h3>
                         <p className="text-default-600">
-                          123 Education Street<br />
-                          Innovation City, 600001<br />
-                          Tamil Nadu, India
+                          Block No: 2/11<br />
+                          Jayanagar 1st Block<br />
+                          Bangalore, 560011<br />
+                          Karnataka, India.
                         </p>
                       </div>
                     </div>
@@ -69,8 +70,8 @@ const ContactPage: React.FC = () => {
                       <div>
                         <h3 className="text-lg font-semibold mb-1">Phone</h3>
                         <p className="text-default-600">
-                          Main: +91 98765 43210<br />
-                          Support: +91 98765 43211
+                          Main: +91 7995080949<br />
+                          Support: +91 9121510310
                         </p>
                       </div>
                     </div>
@@ -86,9 +87,9 @@ const ContactPage: React.FC = () => {
                       <div>
                         <h3 className="text-lg font-semibold mb-1">Email</h3>
                         <p className="text-default-600">
-                          General: info@kalamsvision.org<br />
-                          Programs: programs@kalamsvision.org<br />
-                          Support: support@kalamsvision.org
+                          General: info@kalamvision.com<br />
+                          {/* Programs: programs@kalamsvision.com<br /> */}
+                          Support: support@kalamvision.com
                         </p>
                       </div>
                     </div>
@@ -208,7 +209,7 @@ const ContactPage: React.FC = () => {
               <CardBody className="p-6">
                 <h3 className="text-xl font-bold mb-2">How can schools partner with Kalam's Vision?</h3>
                 <p className="text-default-600">
-                  Schools can partner with us by reaching out through our contact form or emailing us at partnerships@kalamsvision.org. We offer various programs that can be tailored to your school's needs.
+                  Schools can partner with us by reaching out through our contact form or emailing us at info@kalamvision.com. We offer various programs that can be tailored to your school's needs.
                 </p>
               </CardBody>
             </Card>
