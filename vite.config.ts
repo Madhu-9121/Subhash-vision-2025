@@ -13,5 +13,11 @@ export default defineConfig({
       "0.0.0.0",
       "9fa9bec1-56dd-41a4-bec0-4e618d4076e5-00-2clovamrfmfk4.worf.repl.co",
     ],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   },
 });
