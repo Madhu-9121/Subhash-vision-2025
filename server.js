@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -42,7 +41,7 @@ app.post('/api/contact', async (req, res) => {
   console.log('SMTP_USER:', process.env.SMTP_USER);
   console.log('SMTP_PASS:', process.env.SMTP_PASS ? '***configured***' : 'NOT SET');
   console.log('CONTACT_RECEIVER:', process.env.CONTACT_RECEIVER);
-  
+
   const { name, country, orgType, orgName, email, phoneCode, phone, message } = req.body;
 
   // Validate required fields
@@ -131,7 +130,7 @@ app.post('/api/contact', async (req, res) => {
           <h2 style="color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 25px;">
             📧 New Contact Form Submission
           </h2>
-          
+
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: white; margin-top: 0; margin-bottom: 15px;">👤 Personal Information</h3>
             <table style="width: 100%; color: white;">
@@ -153,7 +152,7 @@ app.post('/api/contact', async (req, res) => {
               </tr>
             </table>
           </div>
-          
+
           <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: white; margin-top: 0; margin-bottom: 15px;">🏢 Organization Details</h3>
             <table style="width: 100%; color: white;">
@@ -167,7 +166,7 @@ app.post('/api/contact', async (req, res) => {
               </tr>
             </table>
           </div>
-          
+
           ${safeMessage ? `
           <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="color: white; margin-top: 0; margin-bottom: 15px;">💬 Message</h3>
@@ -179,7 +178,7 @@ app.post('/api/contact', async (req, res) => {
             <p style="margin: 0; color: #2d3436; font-style: italic;">No message provided</p>
           </div>
           `}
-          
+
           <div style="margin-top: 30px; padding: 20px; background-color: #ecf0f1; border-radius: 8px; border-left: 4px solid #3498db;">
             <h4 style="color: #2c3e50; margin-top: 0;">📋 Quick Actions</h4>
             <p style="margin: 10px 0; color: #34495e;">
@@ -189,7 +188,7 @@ app.post('/api/contact', async (req, res) => {
               <strong>Call:</strong> <a href="tel:+${safePhoneCode}${safePhone}" style="color: #3498db; text-decoration: none;">+${safePhoneCode} ${safePhone}</a>
             </p>
           </div>
-          
+
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #bdc3c7; color: #7f8c8d; font-size: 12px; text-align: center;">
             <p style="margin: 0;">This email was sent from your website contact form</p>
             <p style="margin: 5px 0 0 0;">📅 ${new Date().toLocaleString()}</p>
@@ -216,6 +215,34 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+// Add error handling for the server
+process.on('uncaughtException', (err) => {
+  console.error('=== UNCAUGHT EXCEPTION ===');
+  console.error(err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('=== UNHANDLED REJECTION ===');
+  console.error(err);
+});
+
+console.log('Setting up server to listen on port:', PORT);
+
+app.listen(PORT, '0.0.0.0', (err) => {
+  if (err) {
+    console.error('=== SERVER FAILED TO START ===');
+    console.error(err);
+    return;
+  }
+
+  console.log(`=== EXPRESS SERVER STARTED ===`);
   console.log(`API server running on http://0.0.0.0:${PORT}`);
+  console.log(`Environment check:`);
+  console.log(`- SMTP_HOST: ${process.env.SMTP_HOST || 'NOT SET'}`);
+  console.log(`- SMTP_PORT: ${process.env.SMTP_PORT || 'NOT SET'}`);
+  console.log(`- SMTP_USER: ${process.env.SMTP_USER || 'NOT SET'}`);
+  console.log(`- SMTP_PASS: ${process.env.SMTP_PASS ? 'CONFIGURED' : 'NOT SET'}`);
+  console.log(`- CONTACT_RECEIVER: ${process.env.CONTACT_RECEIVER || 'NOT SET'}`);
+  console.log(`=== SERVER READY ===`);
 });
