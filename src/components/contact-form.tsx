@@ -65,7 +65,9 @@ export const ContactForm = () => {
         console.log('Success response:', result);
 
         setIsSubmitted(true);
-        showToast('success', "Thank you for reaching out. We'll get back to you soon.", "Message Sent Successfully!");
+        // showToast('success', "Thank you for reaching out. We'll get back to you soon.", "Message Sent Successfully!");
+        console.log("Success:", result.message || "Message sent successfully!");
+        alert("Message sent successfully! We'll get back to you soon.");
 
         // Reset form
         setFormData({
@@ -90,13 +92,17 @@ export const ContactForm = () => {
 
         console.error('Server error:', errorMessage);
         setError(errorMessage);
-        showToast('error', errorMessage, "Failed to Send Message");
+        // showToast('error', errorMessage, "Failed to Send Message");
+        console.error("Contact form error:", errorMessage);
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Contact form error:', error);
       const networkError = 'Network error. Please check your connection and try again.';
       setError(networkError);
       showToast('error', networkError, "Connection Error");
+      console.error("Contact form error:", networkError);
+      alert(`Error: ${networkError}`);
     } finally {
       setIsSubmitting(false);
     }
