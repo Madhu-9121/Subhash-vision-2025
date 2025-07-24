@@ -10,6 +10,21 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Test endpoint to check server status and environment variables
+app.get('/api/test', (req, res) => {
+  res.json({
+    status: 'Server is running',
+    timestamp: new Date().toISOString(),
+    envCheck: {
+      SMTP_HOST: process.env.SMTP_HOST || 'NOT SET',
+      SMTP_PORT: process.env.SMTP_PORT || 'NOT SET',
+      SMTP_USER: process.env.SMTP_USER || 'NOT SET',
+      SMTP_PASS: process.env.SMTP_PASS ? 'CONFIGURED' : 'NOT SET',
+      CONTACT_RECEIVER: process.env.CONTACT_RECEIVER || 'NOT SET'
+    }
+  });
+});
+
 function escapeHtml(str) {
   if (!str) return "";
   return str
@@ -19,6 +34,15 @@ function escapeHtml(str) {
 }
 
 app.post('/api/contact', async (req, res) => {
+  console.log('=== CONTACT FORM SUBMISSION ===');
+  console.log('Request body:', req.body);
+  console.log('Environment variables check:');
+  console.log('SMTP_HOST:', process.env.SMTP_HOST);
+  console.log('SMTP_PORT:', process.env.SMTP_PORT);
+  console.log('SMTP_USER:', process.env.SMTP_USER);
+  console.log('SMTP_PASS:', process.env.SMTP_PASS ? '***configured***' : 'NOT SET');
+  console.log('CONTACT_RECEIVER:', process.env.CONTACT_RECEIVER);
+  
   const { name, country, orgType, orgName, email, phoneCode, phone, message } = req.body;
 
   // Validate required fields
@@ -192,6 +216,6 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`API server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API server running on http://0.0.0.0:${PORT}`);
 });

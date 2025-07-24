@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardBody, Input, Textarea, Button, Select, SelectItem } from '@heroui/react';
 import { motion } from 'framer-motion';
@@ -18,7 +19,19 @@ export const ContactForm: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [toast, setToast] = React.useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({ show: false, message: '', type: 'info' });
   
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'info' });
+    }, 5000);
+  };
+
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
@@ -34,7 +47,9 @@ export const ContactForm: React.FC = () => {
     const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
     
     if (missingFields.length > 0) {
-      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      const errorMsg = `Please fill in all required fields: ${missingFields.join(', ')}`;
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
       setIsLoading(false);
       return;
     }
@@ -42,13 +57,18 @@ export const ContactForm: React.FC = () => {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      const errorMsg = 'Please enter a valid email address';
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
       setIsLoading(false);
       return;
     }
     
     try {
-      // Send to Vercel serverless function
+      console.log('Sending contact form data:', formData);
+      showToast('Sending message...', 'info');
+      
+      // Try the local Express server first
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
@@ -57,10 +77,19 @@ export const ContactForm: React.FC = () => {
         body: JSON.stringify(formData),
       });
       
-      const result = await response.json();
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
-      if (response.ok && result.success) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('Response result:', result);
+      
+      if (result.success) {
         setIsSubmitted(true);
+        showToast('Message sent successfully! We\'ll get back to you soon.', 'success');
         setFormData({
           name: '',
           email: '',
@@ -77,11 +106,22 @@ export const ContactForm: React.FC = () => {
           setIsSubmitted(false);
         }, 5000);
       } else {
-        setError(result.error || 'Failed to send message. Please try again.');
+        throw new Error(result.error || 'Failed to send message');
       }
-    } catch (err) {
-      setError('Network error. Please check your connection and try again.');
+    } catch (err: any) {
       console.error('Contact form error:', err);
+      let errorMessage = 'Failed to send message. Please try again.';
+      
+      if (err.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (err.message.includes('JSON')) {
+        errorMessage = 'Server response error. Please try again later.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -118,26 +158,51 @@ export const ContactForm: React.FC = () => {
   
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
-      {/* Setup Instructions */}
-      <Card className="mb-6 border-blue-200 bg-blue-50">
+      {/* Toast Notification */}
+      {toast.show && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center gap-3 ${
+            toast.type === 'success' 
+              ? 'bg-success text-success-foreground' 
+              : toast.type === 'error' 
+              ? 'bg-danger text-danger-foreground' 
+              : 'bg-primary text-primary-foreground'
+          }`}
+        >
+          <Icon 
+            icon={
+              toast.type === 'success' 
+                ? 'lucide:check-circle' 
+                : toast.type === 'error' 
+                ? 'lucide:alert-circle' 
+                : 'lucide:info'
+            } 
+            className="text-xl" 
+          />
+          <p className="font-medium">{toast.message}</p>
+        </motion.div>
+      )}
+
+      {/* Environment Variables Check */}
+      <Card className="mb-6 border-orange-200 bg-orange-50">
         <CardBody className="p-4">
           <div className="flex items-start gap-3">
-            <Icon icon="lucide:info" className="text-blue-600 text-xl flex-shrink-0 mt-0.5" />
+            <Icon icon="lucide:settings" className="text-orange-600 text-xl flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-blue-800 font-semibold mb-2">Vercel Deployment Setup</h3>
-              <div className="text-blue-700 text-sm space-y-2">
-                <p>To make this form work on Vercel, you need to:</p>
-                <ol className="list-decimal list-inside space-y-1 ml-4">
-                  <li>Create an <code className="bg-blue-100 px-1 rounded">api/contact.js</code> file in your project root</li>
-                  <li>Add environment variables in Vercel dashboard</li>
-                  <li>Configure your email provider settings</li>
-                  <li>Deploy to Vercel</li>
-                </ol>
-                <p className="mt-2">
-                  <strong>Required Environment Variables:</strong><br/>
-                  <code className="bg-blue-100 px-1 rounded text-xs">
-                    SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, CONTACT_RECEIVER
-                  </code>
+              <h3 className="text-orange-800 font-semibold mb-2">Email Configuration Status</h3>
+              <div className="text-orange-700 text-sm space-y-2">
+                <p>Current environment variables in .env file:</p>
+                <ul className="list-disc list-inside space-y-1 ml-4">
+                  <li><strong>SMTP_HOST:</strong> smtp.hostinger.com</li>
+                  <li><strong>SMTP_PORT:</strong> 587</li>
+                  <li><strong>SMTP_USER:</strong> info@kalamvision.com</li>
+                  <li><strong>CONTACT_RECEIVER:</strong> info@kalamvision.com</li>
+                </ul>
+                <p className="mt-2 text-xs">
+                  <strong>Note:</strong> Make sure your Express server (server.js) is running on port 3001 and accessible.
                 </p>
               </div>
             </div>
