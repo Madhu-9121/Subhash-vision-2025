@@ -41,6 +41,67 @@ export const ContactForm = () => {
     }));
   };
 
+  const handleTestSubmit = async () => {
+    setIsSubmitting(true);
+    setError('');
+
+    // Fill form with test data
+    const testData = {
+      name: 'John Doe Test',
+      email: 'test@example.com',
+      phoneCode: '1',
+      phone: '5551234567',
+      country: 'United States',
+      orgType: 'university',
+      orgName: 'Test University',
+      message: 'This is a test email sent automatically to verify the contact form functionality.'
+    };
+
+    setFormData(testData);
+
+    try {
+      console.log('Sending test contact form data:', testData);
+
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testData)
+      });
+
+      console.log('Test response status:', response.status);
+      console.log('Test response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Test success response:', result);
+
+        alert("Test email sent successfully! Check your email inbox.");
+      } else {
+        let errorMessage = 'Failed to send test email. Please try again.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error('Error parsing test error response:', jsonError);
+          errorMessage = `Server error (${response.status}). Please try again later.`;
+        }
+
+        console.error('Test server error:', errorMessage);
+        setError(errorMessage);
+        alert(`Test Error: ${errorMessage}`);
+      }
+    } catch (error) {
+      console.error('Test contact form error:', error);
+      const networkError = 'Network error. Please check your connection and try again.';
+      setError(networkError);
+      alert(`Test Error: ${networkError}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -347,7 +408,20 @@ export const ContactForm = () => {
                 minRows={4}
               />
 
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                <Button 
+                  onClick={handleTestSubmit}
+                  color="secondary"
+                  variant="bordered"
+                  size="lg"
+                  className="font-medium"
+                  isLoading={isSubmitting}
+                  disabled={isSubmitting}
+                  endContent={!isSubmitting && <Icon icon="lucide:zap" />}
+                >
+                  {isSubmitting ? 'Testing...' : 'Send Test Email'}
+                </Button>
+                
                 <Button 
                   onClick={handleSubmit}
                   color="primary"

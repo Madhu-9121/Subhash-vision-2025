@@ -2,18 +2,30 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
+// Load environment variables first
 dotenv.config();
 
 const app = express();
 const PORT = 3001;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Log environment variables on startup
+console.log('=== ENVIRONMENT VARIABLES CHECK ===');
+console.log('SMTP_HOST:', process.env.SMTP_HOST || 'NOT SET');
+console.log('SMTP_PORT:', process.env.SMTP_PORT || 'NOT SET');
+console.log('SMTP_USER:', process.env.SMTP_USER || 'NOT SET');
+console.log('SMTP_PASS:', process.env.SMTP_PASS ? '***CONFIGURED***' : 'NOT SET');
+console.log('CONTACT_RECEIVER:', process.env.CONTACT_RECEIVER || 'NOT SET');
+console.log('===================================');
+
 // Test endpoint to check server status and environment variables
 app.get('/api/test', (req, res) => {
+  console.log('=== TEST ENDPOINT CALLED ===');
   res.json({
     status: 'Server is running',
     timestamp: new Date().toISOString(),
@@ -36,8 +48,8 @@ function escapeHtml(str) {
 }
 
 app.post('/api/contact', async (req, res) => {
-  console.log('=== CONTACT FORM SUBMISSION ===');
-  console.log('Request body:', req.body);
+  console.log('=== CONTACT FORM SUBMISSION START ===');
+  console.log('Request body:', JSON.stringify(req.body, null, 2));
   console.log('Environment variables check:');
   console.log('SMTP_HOST:', process.env.SMTP_HOST);
   console.log('SMTP_PORT:', process.env.SMTP_PORT);
@@ -58,6 +70,8 @@ app.post('/api/contact', async (req, res) => {
   if (!phone) missingFields.push("phone");
 
   if (missingFields.length > 0) {
+    console.log('=== VALIDATION ERROR ===');
+    console.log('Missing fields:', missingFields);
     return res.status(400).json({
       error: `Missing required field(s): ${missingFields.join(", ")}`,
     });
@@ -66,14 +80,26 @@ app.post('/api/contact', async (req, res) => {
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
+    console.log('=== EMAIL VALIDATION ERROR ===');
+    console.log('Invalid email:', email);
     return res.status(400).json({
       error: 'Please enter a valid email address',
+    });
+  }
+
+  // Check if all required environment variables are set
+  if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.CONTACT_RECEIVER) {
+    console.log('=== ENVIRONMENT VARIABLES ERROR ===');
+    console.log('Missing environment variables');
+    return res.status(500).json({ 
+      error: "Email server configuration error. Missing environment variables." 
     });
   }
 
   // Create transporter with environment variables
   let transporter;
   try {
+    console.log('=== CREATING TRANSPORTER ===');
     transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "587", 10),
@@ -83,17 +109,21 @@ app.post('/api/contact', async (req, res) => {
         pass: process.env.SMTP_PASS,
       },
     });
+    console.log('Transporter created successfully');
   } catch (err) {
-    console.error("Error creating transporter:", err);
+    console.error("=== TRANSPORTER CREATION ERROR ===");
+    console.error(err);
     return res.status(500).json({ error: "Email server configuration error." });
   }
 
   // Verify SMTP connection
   try {
+    console.log('=== VERIFYING SMTP CONNECTION ===');
     await transporter.verify();
     console.log("SMTP connection verified successfully");
   } catch (err) {
-    console.error("SMTP verification failed:", err);
+    console.error("=== SMTP VERIFICATION FAILED ===");
+    console.error(err);
     return res.status(500).json({
       error: "Unable to connect to mail server. Please check SMTP settings.",
     });
@@ -203,17 +233,30 @@ app.post('/api/contact', async (req, res) => {
 
   // Send email
   try {
+    console.log('=== SENDING EMAIL ===');
+    console.log('Mail options:', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      replyTo: mailOptions.replyTo,
+      subject: mailOptions.subject
+    });
+    
     const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully:", info.messageId);
+    console.log("=== EMAIL SENT SUCCESSFULLY ===");
+    console.log("Message ID:", info.messageId);
+    console.log("Response:", info.response);
+    
     return res.status(200).json({ 
       success: true, 
       message: "Email sent successfully",
       messageId: info.messageId 
     });
   } catch (error) {
-    console.error("Error sending contact email:", error);
+    console.error("=== ERROR SENDING EMAIL ===");
+    console.error(error);
     return res.status(500).json({
       error: "Failed to send email. Please try again later.",
+      details: error.message
     });
   }
 });
@@ -230,6 +273,7 @@ process.on('unhandledRejection', (err) => {
   console.error(err);
 });
 
+console.log('=== STARTING SERVER ===');
 console.log('Setting up server to listen on port:', PORT);
 
 app.listen(PORT, '0.0.0.0', (err) => {
@@ -239,13 +283,16 @@ app.listen(PORT, '0.0.0.0', (err) => {
     return;
   }
 
-  console.log(`=== EXPRESS SERVER STARTED ===`);
+  console.log(`=== EXPRESS SERVER STARTED SUCCESSFULLY ===`);
   console.log(`API server running on http://0.0.0.0:${PORT}`);
-  console.log(`Environment check:`);
+  console.log('Available endpoints:');
+  console.log(`- GET  http://0.0.0.0:${PORT}/api/test`);
+  console.log(`- POST http://0.0.0.0:${PORT}/api/contact`);
+  console.log(`Environment configuration:`);
   console.log(`- SMTP_HOST: ${process.env.SMTP_HOST || 'NOT SET'}`);
   console.log(`- SMTP_PORT: ${process.env.SMTP_PORT || 'NOT SET'}`);
   console.log(`- SMTP_USER: ${process.env.SMTP_USER || 'NOT SET'}`);
   console.log(`- SMTP_PASS: ${process.env.SMTP_PASS ? 'CONFIGURED' : 'NOT SET'}`);
   console.log(`- CONTACT_RECEIVER: ${process.env.CONTACT_RECEIVER || 'NOT SET'}`);
-  console.log(`=== SERVER READY ===`);
+  console.log(`=== SERVER READY TO ACCEPT REQUESTS ===`);
 });
