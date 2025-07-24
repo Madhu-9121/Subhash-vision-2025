@@ -100,7 +100,7 @@ app.post('/api/contact', async (req, res) => {
   let transporter;
   try {
     console.log('=== CREATING TRANSPORTER ===');
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "587", 10),
       secure: process.env.SMTP_SECURE === "true",
