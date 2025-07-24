@@ -100,15 +100,27 @@ app.post('/api/contact', async (req, res) => {
   let transporter;
   try {
     console.log('=== CREATING TRANSPORTER ===');
-    transporter = nodemailer.createTransport({
+    const smtpConfig = {
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || "587", 10),
       secure: process.env.SMTP_SECURE === "true",
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: process.env.SMTP_USER?.trim(),
+        pass: process.env.SMTP_PASS?.trim(),
       },
+      debug: true, // Enable debug output
+      logger: true // Log to console
+    };
+    
+    console.log('SMTP Config (without password):', {
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      user: smtpConfig.auth.user,
+      passLength: smtpConfig.auth.pass?.length
     });
+    
+    transporter = nodemailer.createTransport(smtpConfig);
     console.log('Transporter created successfully');
   } catch (err) {
     console.error("=== TRANSPORTER CREATION ERROR ===");
