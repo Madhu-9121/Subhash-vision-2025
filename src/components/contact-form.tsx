@@ -100,7 +100,6 @@ export const ContactForm = () => {
       console.error('Contact form error:', error);
       const networkError = 'Network error. Please check your connection and try again.';
       setError(networkError);
-      showToast('error', networkError, "Connection Error");
       console.error("Contact form error:", networkError);
       alert(`Error: ${networkError}`);
     } finally {
