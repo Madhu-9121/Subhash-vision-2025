@@ -1,132 +1,101 @@
-
-import React from 'react';
-import { Card, CardBody, Input, Textarea, Button, Select, SelectItem } from '@heroui/react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Card, CardBody, Input, Select, SelectItem, Textarea, Button, useToast } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
-export const ContactForm: React.FC = () => {
-  const [formData, setFormData] = React.useState({
+export const ContactForm = () => {
+  const toast = useToast();
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneCode: '',
+    phoneCode: '+1',
     phone: '',
     country: '',
     orgType: '',
     orgName: '',
     message: ''
   });
-  
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [toast, setToast] = React.useState<{
-    show: boolean;
-    message: string;
-    type: 'success' | 'error' | 'info';
-  }>({ show: false, message: '', type: 'info' });
-  
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'info' });
-    }, 5000);
-  };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (error) setError(null);
-  };
-  
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    // Validate required fields
-    const requiredFields = ['name', 'email', 'phoneCode', 'phone', 'country', 'orgType', 'orgName'];
-    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
-    
-    if (missingFields.length > 0) {
-      const errorMsg = `Please fill in all required fields: ${missingFields.join(', ')}`;
-      setError(errorMsg);
-      showToast(errorMsg, 'error');
-      setIsLoading(false);
-      return;
-    }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      const errorMsg = 'Please enter a valid email address';
-      setError(errorMsg);
-      showToast(errorMsg, 'error');
-      setIsLoading(false);
-      return;
-    }
-    
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+
     try {
       console.log('Sending contact form data:', formData);
-      showToast('Sending message...', 'info');
-      
-      // Try the local Express server first
+
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       });
-      
+
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('Response result:', result);
-      
-      if (result.success) {
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Success response:', result);
+
         setIsSubmitted(true);
-        showToast('Message sent successfully! We\'ll get back to you soon.', 'success');
+        toast({
+          title: "Message Sent Successfully!",
+          description: "Thank you for reaching out. We'll get back to you soon.",
+          status: "success",
+          duration: 5000,
+        });
+
+        // Reset form
         setFormData({
           name: '',
           email: '',
-          phoneCode: '',
+          phoneCode: '+1',
           phone: '',
           country: '',
           orgType: '',
           orgName: '',
           message: ''
         });
-        
-        // Reset success message after 5 seconds
-        setTimeout(() => {
-          setIsSubmitted(false);
-        }, 5000);
       } else {
-        throw new Error(result.error || 'Failed to send message');
+        let errorMessage = 'Failed to send message. Please try again.';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+          errorMessage = `Server error (${response.status}). Please try again later.`;
+        }
+
+        console.error('Server error:', errorMessage);
+        setError(errorMessage);
+        toast({
+          title: "Failed to Send Message",
+          description: errorMessage,
+          status: "error",
+          duration: 7000,
+        });
       }
-    } catch (err: any) {
-      console.error('Contact form error:', err);
-      let errorMessage = 'Failed to send message. Please try again.';
-      
-      if (err.message.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (err.message.includes('JSON')) {
-        errorMessage = 'Server response error. Please try again later.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
-      showToast(errorMessage, 'error');
+    } catch (error) {
+      console.error('Contact form error:', error);
+      const networkError = 'Network error. Please check your connection and try again.';
+      setError(networkError);
+      toast({
+        title: "Connection Error",
+        description: networkError,
+        status: "error",
+        duration: 7000,
+      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-  
+
   const countries = [
     { value: "United States", label: "United States" },
     { value: "Canada", label: "Canada" },
@@ -137,7 +106,7 @@ export const ContactForm: React.FC = () => {
     { value: "France", label: "France" },
     { value: "Other", label: "Other" }
   ];
-  
+
   const organizationTypes = [
     { value: "school", label: "School" },
     { value: "university", label: "University" },
@@ -146,7 +115,7 @@ export const ContactForm: React.FC = () => {
     { value: "corporate", label: "Corporate" },
     { value: "individual", label: "Individual" }
   ];
-  
+
   const phoneCodes = [
     { value: "1", label: "+1 (US/CA)" },
     { value: "44", label: "+44 (UK)" },
@@ -155,7 +124,7 @@ export const ContactForm: React.FC = () => {
     { value: "49", label: "+49 (DE)" },
     { value: "33", label: "+33 (FR)" }
   ];
-  
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       {/* Toast Notification */}
@@ -209,7 +178,7 @@ export const ContactForm: React.FC = () => {
           </div>
         </CardBody>
       </Card>
-      
+
       <Card className="w-full">
         <CardBody className="p-6">
           {isSubmitted ? (
@@ -238,7 +207,7 @@ export const ContactForm: React.FC = () => {
                   <p className="text-danger text-sm">{error}</p>
                 </motion.div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Input
                   label="Full Name"
@@ -251,7 +220,7 @@ export const ContactForm: React.FC = () => {
                     <Icon icon="lucide:user" className="text-default-400 text-sm" />
                   }
                 />
-                
+
                 <Input
                   label="Email Address"
                   placeholder="Enter your email"
@@ -265,7 +234,7 @@ export const ContactForm: React.FC = () => {
                   }
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Select
                   label="Phone Code"
@@ -287,7 +256,7 @@ export const ContactForm: React.FC = () => {
                     </SelectItem>
                   ))}
                 </Select>
-                
+
                 <Input
                   label="Phone Number"
                   placeholder="Enter phone number"
@@ -298,7 +267,7 @@ export const ContactForm: React.FC = () => {
                   className="md:col-span-2"
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Select
                   label="Country"
@@ -320,7 +289,7 @@ export const ContactForm: React.FC = () => {
                     </SelectItem>
                   ))}
                 </Select>
-                
+
                 <Select
                   label="Organization Type"
                   placeholder="Select organization type"
@@ -342,7 +311,7 @@ export const ContactForm: React.FC = () => {
                   ))}
                 </Select>
               </div>
-              
+
               <Input
                 label="Organization Name"
                 placeholder="Enter your organization name"
@@ -354,7 +323,7 @@ export const ContactForm: React.FC = () => {
                   <Icon icon="lucide:building-2" className="text-default-400 text-sm" />
                 }
               />
-              
+
               <Textarea
                 label="Message"
                 placeholder="Enter your message (optional)"
@@ -363,18 +332,18 @@ export const ContactForm: React.FC = () => {
                 variant="bordered"
                 minRows={4}
               />
-              
+
               <div className="flex justify-end">
                 <Button 
                   onClick={handleSubmit}
                   color="primary"
                   size="lg"
                   className="font-medium"
-                  isLoading={isLoading}
-                  disabled={isLoading}
-                  endContent={!isLoading && <Icon icon="lucide:send" />}
+                  isLoading={isSubmitting}
+                  disabled={isSubmitting}
+                  endContent={!isSubmitting && <Icon icon="lucide:send" />}
                 >
-                  {isLoading ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </div>
             </div>
