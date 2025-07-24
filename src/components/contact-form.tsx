@@ -1,14 +1,22 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardBody, Input, Select, SelectItem, Textarea, Button, useToast } from '@heroui/react';
+import { Card, CardBody, Input, Select, SelectItem, Textarea, Button } from '@heroui/react';
 import { Icon } from '@iconify/react';
 
+interface ToastState {
+  show: boolean;
+  type: 'success' | 'error' | 'info';
+  message: string;
+  title?: string;
+}
+
 export const ContactForm = () => {
-  const toast = useToast();
+  const [toast, setToast] = useState<ToastState>({ show: false, type: 'info', message: '' });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneCode: '+1',
+    phoneCode: '91',
     phone: '',
     country: '',
     orgType: '',
@@ -20,7 +28,21 @@ export const ContactForm = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const showToast = (type: 'success' | 'error' | 'info', message: string, title?: string) => {
+    setToast({ show: true, type, message, title });
+    setTimeout(() => {
+      setToast({ show: false, type: 'info', message: '' });
+    }, 5000);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
@@ -44,18 +66,13 @@ const handleSubmit = async (e: React.FormEvent) => {
         console.log('Success response:', result);
 
         setIsSubmitted(true);
-        toast({
-          title: "Message Sent Successfully!",
-          description: "Thank you for reaching out. We'll get back to you soon.",
-          status: "success",
-          duration: 5000,
-        });
+        showToast('success', "Thank you for reaching out. We'll get back to you soon.", "Message Sent Successfully!");
 
         // Reset form
         setFormData({
           name: '',
           email: '',
-          phoneCode: '+1',
+          phoneCode: '91',
           phone: '',
           country: '',
           orgType: '',
@@ -74,23 +91,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         console.error('Server error:', errorMessage);
         setError(errorMessage);
-        toast({
-          title: "Failed to Send Message",
-          description: errorMessage,
-          status: "error",
-          duration: 7000,
-        });
+        showToast('error', errorMessage, "Failed to Send Message");
       }
     } catch (error) {
       console.error('Contact form error:', error);
       const networkError = 'Network error. Please check your connection and try again.';
       setError(networkError);
-      toast({
-        title: "Connection Error",
-        description: networkError,
-        status: "error",
-        duration: 7000,
-      });
+      showToast('error', networkError, "Connection Error");
     } finally {
       setIsSubmitting(false);
     }
@@ -151,7 +158,10 @@ const handleSubmit = async (e: React.FormEvent) => {
             } 
             className="text-xl" 
           />
-          <p className="font-medium">{toast.message}</p>
+          <div>
+            {toast.title && <p className="font-bold">{toast.title}</p>}
+            <p className={toast.title ? "text-sm" : "font-medium"}>{toast.message}</p>
+          </div>
         </motion.div>
       )}
 
